@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 import modules.const as const
 import modules.data
+import modules.NN as NN
+
+np.random.seed(const.RANDOM_SEED)
 
 def main():
     # Read in cleaned data CSV
@@ -9,25 +12,33 @@ def main():
 
     # print "X_Train\n", train_x
     # print "Y_Train\n", train_y
+    # print "X_Test:\n", test_x
+    # print "Y_Test:\n", test_y
 
-    layer_input = NNLayer(const.NEURONS[0], const.NEURONS[0])
-    layer_hidden = NNLayer(const.NEURONS[0], const.NEURONS[1])
-    layer_output = NNLayer(const.NEURONS[1], const.NEURONS[2])
+    layer_hidden = NN.Layer(const.NEURONS[0], const.NEURONS[1], 'Sigmoid')
+    layer_output = NN.Layer(const.NEURONS[1], const.NEURONS[2], 'Sigmoid')
 
-    print "Hidden weights"
-    print layer_hidden.weights
-    print "Output weights"
-    print layer_output.weights
+    # Print model weights
+    def show_weights():
+        print "Hidden weights:\n{}\nOutput weights:\n{}".format(layer_hidden.weights, layer_output.weights)
+
+    # Calculate model error statistic
+    def eval_model(test_x, test_y):
+        p = predict(test_x, layer_hidden, layer_output)
+
+        sq_err = (test_y - p)**2
+        mse = np.mean(sq_err)
+        print 'Epoch %04d: %.5f MSE (%.5f RMSE)' % (j, mse, np.sqrt(mse))
+        return mse
 
     # Train model
-    for j in range(10):
+    for j in range(200):
         for idx, train_x_row in enumerate(train_x):
             expected = train_y[idx]
 
             # Feed forward
             vals = layer_hidden.output(train_x_row)
             prediction = layer_output.output(vals)
-            # print "Fed Foward...\nInput:",train_x_row, "Expected:", train_y[idx], "Prediction:", prediction
 
             # Backward pass
             output_derivative = layer_output.activation(prediction, True)
@@ -41,55 +52,22 @@ def main():
             layer_hidden.update_weights(np.array(hidden_delta), train_x_row)
             layer_output.update_weights(np.array(output_delta), vals)
 
-    print "Hidden weights"
-    print layer_hidden.weights
-    print "Output weights"
-    print layer_output.weights
+        if j % 50 == 0:
+            eval_model(test_x, test_y)
 
-    print "TEST"
-    v = layer_hidden.output(test_x[0])
-    p = layer_output.output(v)
-    print "Input:",test_x[0], "Expected:", test_y[0], "Prediction:", p
-    v = layer_hidden.output(test_x[1])
-    p = layer_output.output(v)
-    print "Input:",test_x[1], "Expected:", test_y[1], "Prediction:", p
+    error = eval_model(test_x, test_y)
+    prediction = predict(test_x, layer_hidden, layer_output)
 
+    # Plot on graph
+    modules.data.plot(prediction, test_y)
 
-
-
-# Define NN Model
-class NNLayer:
-    def __init__(self, num_inputs, num_neurons):
-        self.inputs = num_inputs
-        self.neurons = num_neurons
-        # randomly assign neuron starting weights and bias (-2/inputs -> 2/inputs)
-        self.weights = np.random.normal(0, float(2)/self.inputs, (self.inputs, self.neurons))
-        self.bias = np.random.normal(0, float(2)/self.inputs, (self.neurons))
-
-    def activation(self, S, derivative=False):
-        if const.ACTIVATION == 'Sigmoid':
-            if derivative:
-                return S * (1 - S)
-            else:
-                return 1 / (1 + np.exp(-S))
-
-    def output(self, values):
-        S = np.dot(values, self.weights)
-        S = np.add(S, self.bias)
-        return self.activation(S)
-
-    def update_weights(self, delta, inputs):
-        # Reshape inputs to form: u(i), transposed for input to each neuron
-        inputs = inputs.reshape(len(inputs),1)
-
-        # Update weights by w(i,j) = w(i,j) + LR * delta(j) * u(i)
-        w_change = const.LEARNING_RATE * delta
-        w_change = w_change * inputs
-        self.weights = np.add(self.weights, w_change)
-
-        # Update bias
-        b_change = const.LEARNING_RATE * delta
-        self.bias = np.add(self.bias, b_change)
+# Use model to predict on given X data
+def predict(data, layer_hidden, layer_output):
+    prediction = []
+    for row in data:
+        vals = layer_hidden.output(row)
+        prediction.append(layer_output.output(vals))
+    return np.array(prediction)
 
 
 if __name__ == '__main__':
