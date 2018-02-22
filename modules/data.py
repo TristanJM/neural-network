@@ -2,6 +2,10 @@ import csv
 import modules.const as const
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+
+np.random.seed(const.RANDOM_SEED)
+plt.rcParams['figure.figsize'] = [16.0, 10.0]
 
 # Read clean data from CSV, normalise, and split
 def read_data():
@@ -18,7 +22,9 @@ def read_data():
 
     df = df.apply(normalise_data, axis=1)
     data = np.array(df)
-    # data = data[-6:]
+
+    # shuffle data
+    np.random.shuffle(data)
 
     train_size = int(const.TRAIN_SPLIT * len(data))
 
@@ -33,7 +39,22 @@ def read_data():
 def denormalise_data(val, max_val, min_val):
     return (val * (max_val - min_val)) + min_val
 
+# Plot prediction data
+def plot(pred, expected):
+    fig = plt.figure()
+    ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1.grid(True)
 
+    ax1.plot(pred, 'x', markersize=7, label='predicted', color='r')
+    ax1.plot(expected, 'o', markersize=7, label='expected', color='b')
+
+    plt.xlabel('Data point')
+    plt.ylabel('PanE')
+    plt.title('PanE Prediction')
+
+    plt.legend()
+    plt.subplots_adjust(left=0.06, bottom=0.18, right=0.95, top=0.95, wspace=0.2, hspace=0)
+    plt.show()
 
 
 
