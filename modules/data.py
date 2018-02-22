@@ -1,3 +1,4 @@
+import warnings
 import csv
 import modules.const as const
 import numpy as np
@@ -6,6 +7,7 @@ import matplotlib.pyplot as plt
 
 np.random.seed(const.RANDOM_SEED)
 plt.rcParams['figure.figsize'] = [16.0, 10.0]
+warnings.simplefilter(action='ignore', category=FutureWarning)  # suppress np/mpl FutureWarning
 
 # Read clean data from CSV, normalise, and split
 def read_data():
@@ -40,18 +42,23 @@ def denormalise_data(val, max_val, min_val):
     return (val * (max_val - min_val)) + min_val
 
 # Plot prediction data
-def plot(pred, expected):
+def plot(pred, expected, plot_type='scatter'):
     fig = plt.figure()
     ax1 = plt.subplot2grid((1,1), (0,0))
     ax1.grid(True)
 
-    ax1.plot(pred, 'x', markersize=7, label='predicted', color='r')
-    ax1.plot(expected, 'o', markersize=7, label='expected', color='b')
+    if plot_type == 'line':
+        ax1.plot(pred, 'x', markersize=7, label='predicted', color='r')
+        ax1.plot(expected, 'o', markersize=7, label='expected', color='b')
+        plt.xlabel('Data point')
+        plt.ylabel('PanE')
+    else:
+        ax1.plot([0,1],[0,1], color='black', alpha=0.5, label='Expected')   # reference line
+        ax1.scatter(expected, pred, label='PanE')
+        plt.xlabel('Expected')
+        plt.ylabel('Predicted')
 
-    plt.xlabel('Data point')
-    plt.ylabel('PanE')
     plt.title('PanE Prediction')
-
     plt.legend()
     plt.subplots_adjust(left=0.06, bottom=0.18, right=0.95, top=0.95, wspace=0.2, hspace=0)
     plt.show()

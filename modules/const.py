@@ -10,4 +10,4 @@ NEURONS = [FEATURES, 4, 1] # Input, Hidden neurons, Output neurons
 ACTIVATION = 'Sigmoid'
 LEARNING_RATE = 0.1
 
-RANDOM_SEED = 1
+RANDOM_SEED = 50

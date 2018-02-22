@@ -59,7 +59,7 @@ def main():
     prediction = predict(test_x, layer_hidden, layer_output)
 
     # Plot on graph
-    modules.data.plot(prediction, test_y)
+    modules.data.plot(prediction, test_y, 'scatter')
 
 # Use model to predict on given X data
 def predict(data, layer_hidden, layer_output):
