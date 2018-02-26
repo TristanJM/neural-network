@@ -29,13 +29,16 @@ def read_data():
     np.random.shuffle(data)
 
     train_size = int(const.TRAIN_SPLIT * len(data))
+    val_size = int(const.VALIDATION_SPLIT * len(data))
 
     train_x = data[:train_size][:, :-1]
     train_y = data[:train_size][:, -1:]
-    test_x = data[train_size:][:, :-1]
-    test_y = data[train_size:][:, -1:]
+    val_x = data[train_size:train_size+val_size][:, :-1]
+    val_y = data[train_size:train_size+val_size][:, -1:]
+    test_x = data[train_size+val_size:][:, :-1]
+    test_y = data[train_size+val_size:][:, -1:]
 
-    return train_x, train_y, test_x, test_y
+    return train_x, train_y, val_x, val_y, test_x, test_y
 
 # Denormalise
 def denormalise_data(val, max_val, min_val):
