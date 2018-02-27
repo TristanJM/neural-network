@@ -35,7 +35,7 @@ def main():
     j = 0
     if const.TRAIN:
         overfit = False
-        validation_err = None
+        last_val_err = None
         while j < const.MAX_EPOCHS and not overfit:
             for idx, train_x_row in enumerate(train_x):
                 expected = train_y[idx]
@@ -60,11 +60,9 @@ def main():
 
             if j % const.VALIDATION_EPOCHS == 0:
                 err = eval_model(val_x, val_y, 'validation')
-                # eval_model(test_x, test_y)
-                print "Last:", validation_err, "New err:", err
-                if validation_err is not None and err >= validation_err:
+                if last_val_err is not None and err >= last_val_err:
                     overfit = True
-                validation_err = err
+                last_val_err = err
             j += 1
 
         show_weights('training')
