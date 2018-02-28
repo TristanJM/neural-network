@@ -12,7 +12,7 @@ def main():
 
     # Generate NN with random starting weights
     layer_hidden = NN.Layer(const.NEURONS[0], const.NEURONS[1], 'Sigmoid')
-    layer_output = NN.Layer(const.NEURONS[1], const.NEURONS[2], 'Sigmoid')
+    layer_output = NN.Layer(const.NEURONS[1], const.NEURONS[2], 'Linear')
 
     # Print model weights
     def show_weights(info_str):
@@ -20,7 +20,7 @@ def main():
         print "Hidden weights:\n{}\nOutput weights:\n{}".format(layer_hidden.weights, layer_output.weights)
 
     load_model(layer_hidden, layer_output)
-    show_weights('load')
+    # show_weights('load')
 
     # Calculate model error statistic
     def eval_model(x_data, y_data, eval_type="test"):
@@ -42,7 +42,9 @@ def main():
 
                 # Feed forward
                 vals = layer_hidden.output(train_x_row)
+                # print "Vals",j,"\n", vals
                 prediction = layer_output.output(vals)
+                # print "Preds",j,"\n", prediction
 
                 # Backward pass - output neuron
                 output_derivative = layer_output.activation(prediction, True)
@@ -65,7 +67,7 @@ def main():
                 last_val_err = err
             j += 1
 
-        show_weights('training')
+        # show_weights('training')
         save_model(layer_hidden, layer_output)
 
     error = eval_model(test_x, test_y)

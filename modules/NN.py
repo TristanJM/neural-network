@@ -20,7 +20,11 @@ class Layer:
                 return S * (1 - S)
             else:
                 return 1 / (1 + np.exp(-S))
-        # TODO: Linear layer
+        elif self.activation_method == 'Linear':
+            if derivative:
+                return 1
+            else:
+                return S
 
     def output(self, values):
         S = np.dot(values, self.weights)
