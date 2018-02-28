@@ -10,16 +10,22 @@ class Layer:
         self.neurons = num_neurons
         self.activation_method = activation_method
 
+        # Stores last adjustments for momentum
+        self.last_change_w = np.zeros((self.inputs, self.neurons))
+        self.last_change_b = np.zeros((self.neurons))
+
         # randomly assign neuron starting weights and bias (-2/inputs -> 2/inputs)
         self.weights = np.random.normal(0, float(2)/self.inputs, (self.inputs, self.neurons))
         self.bias = np.random.normal(0, float(2)/self.inputs, (self.neurons))
 
     def activation(self, S, derivative=False):
+        # Sigmoid
         if self.activation_method == 'Sigmoid':
             if derivative:
                 return S * (1 - S)
             else:
                 return 1 / (1 + np.exp(-S))
+        # Linear
         elif self.activation_method == 'Linear':
             if derivative:
                 return 1
@@ -43,3 +49,11 @@ class Layer:
         # Update bias
         b_change = const.LEARNING_RATE * delta
         self.bias += b_change
+
+        # Momentum
+        if const.MOMENTUM:
+            self.weights += self.last_change_w * const.MOMENTUM_ALPHA
+            self.bias += self.last_change_b * const.MOMENTUM_ALPHA
+            # Record changes for next iteration
+            self.last_change_w = w_change
+            self.last_change_b = b_change

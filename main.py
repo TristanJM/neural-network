@@ -42,9 +42,7 @@ def main():
 
                 # Feed forward
                 vals = layer_hidden.output(train_x_row)
-                # print "Vals",j,"\n", vals
                 prediction = layer_output.output(vals)
-                # print "Preds",j,"\n", prediction
 
                 # Backward pass - output neuron
                 output_derivative = layer_output.activation(prediction, True)
