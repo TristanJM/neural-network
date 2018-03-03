@@ -86,6 +86,7 @@ def main():
             if j % const.VALIDATION_EPOCHS == 0:
                 err = eval_model(j, val_x, val_y, layer_hidden, layer_output, 'validation')
                 if last_val_err is not None and err >= last_val_err:
+                    print "Overfitting detected"
                     overfit = True
                 last_val_err = err
             j += 1
@@ -93,7 +94,7 @@ def main():
         # show_weights('training')
         save_model(layer_hidden, layer_output)
 
-    error = eval_model(const.MAX_EPOCHS, test_x, test_y, layer_hidden, layer_output, 'test')
+    error = eval_model(j-1, test_x, test_y, layer_hidden, layer_output, 'test')
     prediction = predict(test_x, layer_hidden, layer_output)
 
     # Plot on graph
