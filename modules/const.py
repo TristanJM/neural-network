@@ -11,7 +11,10 @@ NEURONS = [FEATURES, 4, 1] # Input, Hidden neurons, Output neurons
 LEARNING_RATE = 0.1
 MOMENTUM_ALPHA = 0.9
 MOMENTUM = True
-MAX_EPOCHS = 600
+BOLD_DRIVER = False
+BOLD_DRIVER_INCREASE = 1.1  # Multiply LR by this amount if error is lower
+BOLD_DRIVER_DECREASE = 0.5
+MAX_EPOCHS = 1000
 VALIDATION_EPOCHS = 100 # check validation set error every X epochs
 
 # Options

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import copy
 import modules.const as const
 import modules.data
 import modules.NN as NN
@@ -22,44 +23,68 @@ def main():
     load_model(layer_hidden, layer_output)
     # show_weights('load')
 
-    # Calculate model error statistic
-    def eval_model(x_data, y_data, eval_type="test"):
-        p = predict(x_data, layer_hidden, layer_output)
-
-        sq_err = (y_data - p)**2
-        mse = np.mean(sq_err)
-        print 'Epoch %04d: %.5f MSE (%.5f RMSE) on %s set' % (j, mse, np.sqrt(mse), eval_type)
-        return mse
-
     # Train model
     j = 0
     if const.TRAIN:
         overfit = False
         last_val_err = None
         while j < const.MAX_EPOCHS and not overfit:
-            for idx, train_x_row in enumerate(train_x):
-                expected = train_y[idx]
 
-                # Feed forward
-                vals = layer_hidden.output(train_x_row)
-                prediction = layer_output.output(vals)
+            # Bold driver - automatic Learning Rate adjustment
+            if const.BOLD_DRIVER:
+                adjustment_needed = True
+                adjustment_count = 0
+                while adjustment_needed and adjustment_count < 10:
+                    layer_hidden_BD = copy.deepcopy(layer_hidden)
+                    layer_output_BD = copy.deepcopy(layer_output)
 
-                # Backward pass - output neuron
-                output_derivative = layer_output.activation(prediction, True)
-                output_delta = (expected - prediction) * output_derivative    # output neuron delta
+                    err_before = eval_model(j, train_x, train_y, layer_hidden_BD, layer_output_BD)
 
-                # Backward pass - hidden neurons
-                hidden_delta = []
-                for i, val in enumerate(vals):
-                    hidden_derivative = layer_hidden.activation(val, True)
-                    hidden_delta.append(((output_delta * layer_output.weights[i]) * hidden_derivative)[0])
+                    # Train on train data
+                    for idx, train_x_row in enumerate(train_x):
+                        # Backpropagate - feed forward/back and calculate weights
+                        vals, out_delta, hid_delta = backprop(train_x_row, train_y[idx], layer_hidden, layer_output)
 
-                # Update weights
-                layer_hidden.update_weights(np.array(hidden_delta), train_x_row)
-                layer_output.update_weights(np.array(output_delta), vals)
+                        # Update weights
+                        layer_hidden_BD.update_weights(np.array(hid_delta), train_x_row)
+                        layer_output_BD.update_weights(np.array(out_delta), vals)
+
+                    err_after = eval_model(j, train_x, train_y, layer_hidden_BD, layer_output_BD)
+
+                    msg = ""
+                    if err_after > err_before:
+                        msg += "Higher so LR decrease"
+                    else:
+                        msg += "Lower so LR increase"
+                    # print "Error on epoch",j,"::", err_before, '->', err_after, msg
+                    if err_after > err_before:
+                        # If error goes up, reduce the Learning Rate
+                        if const.LEARNING_RATE * const.BOLD_DRIVER_DECREASE != 0.0:
+                            const.LEARNING_RATE *= const.BOLD_DRIVER_DECREASE
+                        adjustment_needed = True
+                        adjustment_count += 1
+                        # print "BOLD DRIVER REDUCED LR TO", const.LEARNING_RATE
+                    else:
+                        # If the error goes down, Learning Rate may be too small
+                        adjustment_needed = False
+                        const.LEARNING_RATE *= const.BOLD_DRIVER_INCREASE
+                        # print "BOLD DRIVER INCREASED LR TO", const.LEARNING_RATE
+                        clone_layer(layer_hidden_BD, layer_hidden)
+                        clone_layer(layer_output_BD, layer_output)
+            else:
+                # Train on train data
+                for idx, train_x_row in enumerate(train_x):
+                    # Backpropagate - feed forward/back and calculate weights
+                    vals, out_delta, hid_delta = backprop(train_x_row, train_y[idx], layer_hidden, layer_output)
+
+                    # Update weights
+                    layer_hidden.update_weights(np.array(hid_delta), train_x_row)
+                    layer_output.update_weights(np.array(out_delta), vals)
+
+            # print "LR", const.LEARNING_RATE
 
             if j % const.VALIDATION_EPOCHS == 0:
-                err = eval_model(val_x, val_y, 'validation')
+                err = eval_model(j, val_x, val_y, layer_hidden, layer_output, 'validation')
                 if last_val_err is not None and err >= last_val_err:
                     overfit = True
                 last_val_err = err
@@ -68,18 +93,46 @@ def main():
         # show_weights('training')
         save_model(layer_hidden, layer_output)
 
-    error = eval_model(test_x, test_y)
+    error = eval_model(const.MAX_EPOCHS, test_x, test_y, layer_hidden, layer_output, 'test')
     prediction = predict(test_x, layer_hidden, layer_output)
 
     # Plot on graph
     modules.data.plot(prediction, test_y, 'scatter')
 
+def backprop(train_x_row, expected, layer_hidden, layer_output):
+    # Feed forward
+    vals = layer_hidden.output(train_x_row)
+    prediction = layer_output.output(vals)
+
+    # Backward pass - output neuron
+    output_derivative = layer_output.activation(prediction, True)
+    output_delta = (expected - prediction) * output_derivative    # output neuron delta
+
+    # Backward pass - hidden neurons
+    hidden_delta = []
+    for i, val in enumerate(vals):
+        hidden_derivative = layer_hidden.activation(val, True)
+        hidden_delta.append(((output_delta * layer_output.weights[i]) * hidden_derivative)[0])
+
+    return [vals, output_delta, hidden_delta]
+
+# Calculate model error statistic
+def eval_model(epoch_num, x_data, y_data, layer_hid, layer_out, eval_type=''):
+    p = predict(x_data, layer_hid, layer_out)
+
+    sq_err = (y_data - p)**2
+    mse = np.mean(sq_err)
+
+    if len(eval_type) > 0:
+        print 'Epoch %04d: %.5f MSE (%.5f RMSE) on %s set' % (epoch_num, mse, np.sqrt(mse), eval_type)
+    return mse
+
 # Use model to predict on given X data
-def predict(data, layer_hidden, layer_output):
+def predict(data, layer_hid, layer_out):
     prediction = []
     for row in data:
-        vals = layer_hidden.output(row)
-        prediction.append(layer_output.output(vals))
+        vals = layer_hid.output(row)
+        prediction.append(layer_out.output(vals))
     return np.array(prediction)
 
 # Save model weights to text file
@@ -112,6 +165,12 @@ def load_model(layer_hidden, layer_output):
             layer_output.bias = output_bias
         except IOError as e:
             print e
+
+def clone_layer(layer1, layer2):
+    layer2.weights = layer1.weights
+    layer2.bias = layer1.bias
+    layer2.last_change_w = layer1.last_change_w
+    layer2.last_change_b = layer1.last_change_b
 
 if __name__ == '__main__':
     main()
