@@ -5,23 +5,75 @@ import modules.const as const
 import modules.data
 import modules.NN as NN
 
+# GA
+from deap import base, creator, tools, algorithms
+from scipy.stats import bernoulli
+from bitstring import BitArray
+gen_counter = 0
+
 np.random.seed(const.RANDOM_SEED)
 
 def main():
+    # If Genetic Algorithm
+    if const.GA:
+        creator.create('MaxFitness', base.Fitness, weights = (-1.0,))
+        creator.create('Individual', list, fitness = creator.MaxFitness)
+
+        toolbox = base.Toolbox()
+        toolbox.register('binary', bernoulli.rvs, 0.5)
+        toolbox.register('individual', tools.initRepeat, creator.Individual, toolbox.binary, n = const.GA_GENE_LEN)
+        toolbox.register('population', tools.initRepeat, list, toolbox.individual)
+
+        toolbox.register('mate', tools.cxOrdered)
+        toolbox.register('mutate', tools.mutShuffleIndexes, indpb = 0.6)
+        # toolbox.register('select', tools.selRoulette)
+        toolbox.register('select',  tools.selTournament, tournsize=4)
+        toolbox.register('evaluate', train_nn)
+
+        pop = toolbox.population(n = const.GA_POP_SIZE)
+        hof = tools.HallOfFame(const.GA_BEST_INDIVIDUALS)
+        r = algorithms.eaSimple(pop, toolbox, cxpb = const.GA_CROSSOVER_PB, mutpb = const.GA_MUTATION_PB,
+            ngen = const.GA_GENERATIONS, halloffame = hof, verbose = True)
+
+        # Final population (sorted by best first)
+        final_pop = sorted(pop, key=lambda ind: ind.fitness, reverse=True)
+        print 'Final population:\n', \
+            map(lambda x: '%s|%s' % (''.join(str(y) for y in x[0:8]), ''.join(str(y) for y in x[8:])), final_pop), '\n', \
+            map(lambda x: '%03d | %.5f' % (BitArray(x[0:8]).uint+1, float(1)/(BitArray(x[8:]).uint+2)), final_pop), '\n', \
+            map(lambda x: 'RMSE: %.5f' % (x.fitness.values), final_pop)
+
+        # Hall of Fame (best individuals from all generations)
+        print 'Hall of Fame:\n', \
+            map(lambda x: '%s|%s' % (''.join(str(y) for y in x[0:8]), ''.join(str(y) for y in x[8:])), hof), '\n', \
+            map(lambda x: '%03d | %.5f' % (BitArray(x[0:8]).uint+1, float(1)/(BitArray(x[8:]).uint+2)), hof), '\n', \
+            map(lambda x: 'RMSE: %.5f' % (x.fitness.values), hof)
+
+    else:
+        mse = train_nn()
+
+def train_nn(ga_individual=None):
+    # Re-seed as GAs repeat this process
+    np.random.seed(const.RANDOM_SEED)
+
     # Read in cleaned data CSV
     train_x, train_y, val_x, val_y, test_x, test_y = modules.data.read_data()
 
-    # Generate NN with random starting weights
-    layer_hidden = NN.Layer(const.NEURONS[0], const.NEURONS[1], 'Sigmoid')
-    layer_output = NN.Layer(const.NEURONS[1], const.NEURONS[2], 'Linear')
+    # Set params from GA Individual
+    hidden_neurons = const.NEURONS[1]
+    if ga_individual:
+        hidden_neurons = BitArray(ga_individual[0:8]).uint + 1
+        const.LEARNING_RATE = float(1) / (BitArray(ga_individual[8:]).uint + 2)
 
-    # Print model weights
-    def show_weights(info_str):
-        print ">> Weights after %s:" % (info_str)
-        print "Hidden weights:\n{}\nOutput weights:\n{}".format(layer_hidden.weights, layer_output.weights)
+        # Stats
+        global gen_counter
+        gen_counter += 1
+        print '(Idx: %04d) | Neurons: %03d, LR: %05f' % (gen_counter, hidden_neurons, const.LEARNING_RATE)
+
+    # Generate NN with random starting weights
+    layer_hidden = NN.Layer(const.NEURONS[0], hidden_neurons, 'Sigmoid')
+    layer_output = NN.Layer(hidden_neurons, const.NEURONS[2], 'Linear')
 
     load_model(layer_hidden, layer_output)
-    # show_weights('load')
 
     # Train model
     j = 0
@@ -91,14 +143,15 @@ def main():
                 last_val_err = err
             j += 1
 
-        # show_weights('training')
         save_model(layer_hidden, layer_output)
 
-    error = eval_model(j-1, test_x, test_y, layer_hidden, layer_output, 'test')
+    val_error = eval_model(j-1, val_x, val_y, layer_hidden, layer_output, 'validation')
+    tst_error = eval_model(j-1, test_x, test_y, layer_hidden, layer_output, 'test')
     prediction = predict(test_x, layer_hidden, layer_output)
 
     # Plot on graph
-    modules.data.plot(prediction, test_y, 'scatter')
+    # modules.data.plot(prediction, test_y, 'scatter')
+    return (np.sqrt(val_error),)
 
 def backprop(train_x_row, expected, layer_hidden, layer_output):
     # Feed forward
@@ -167,6 +220,12 @@ def load_model(layer_hidden, layer_output):
         except IOError as e:
             print e
 
+# Print model weights
+def show_weights(layer_hidden, layer_output, info_str):
+    print ">> Weights after %s:" % (info_str)
+    print "Hidden weights:\n{}\nOutput weights:\n{}".format(layer_hidden.weights, layer_output.weights)
+
+# Clone layer weights from layer 1 into layer 2
 def clone_layer(layer1, layer2):
     layer2.weights = layer1.weights
     layer2.bias = layer1.bias
