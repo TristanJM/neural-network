@@ -152,11 +152,25 @@ def train_nn(ga_individual=None):
 
     val_error = eval_model(j-1, val_x, val_y, layer_hidden, layer_output, 'validation')
     tst_error = eval_model(j-1, test_x, test_y, layer_hidden, layer_output, 'test')
-    prediction = predict(test_x, layer_hidden, layer_output)
 
     computed_errs[(hidden_neurons,const.LEARNING_RATE)] = np.sqrt(val_error)
-    # Plot on graph
-    # modules.data.plot(prediction, test_y, 'scatter')
+
+    if not const.GA:
+        prediction = predict(test_x, layer_hidden, layer_output)
+
+        # denormalise
+        dn_prediction = modules.data.denormalise_data(prediction)
+        dn_test_y = modules.data.denormalise_data(test_y)
+        dn_text_x = modules.data.denormalise_data(test_x, True)
+
+        # denormalised RMSE
+        dn_sq_err = (dn_test_y - dn_prediction)**2
+        dn_mse = np.mean(dn_sq_err)
+        print 'Epoch %04d: %.6f MSE (%.6f RMSE) on %s set' % (j-1, dn_mse, np.sqrt(dn_mse), 'denormalised test')
+
+        # Plot on graph
+        modules.data.plot(dn_prediction, dn_test_y, 'scatter')
+
     return (np.sqrt(val_error),)
 
 def backprop(train_x_row, expected, layer_hidden, layer_output):

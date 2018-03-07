@@ -27,9 +27,9 @@ GA_CROSSOVER_PB = 0.4
 GA_MUTATION_PB = 0.1
 
 # Options
-TRAIN = True
+TRAIN = False
 MODEL_DIR = './model/'
-MODEL_NAME = 'r06'   # save model
-LOAD_MODEL = ''   # '' or model name
+MODEL_NAME = ''   # save model
+LOAD_MODEL = 'r06'   # '' or model name
 
 RANDOM_SEED = 50

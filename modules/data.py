@@ -9,17 +9,22 @@ np.random.seed(const.RANDOM_SEED)
 plt.rcParams['figure.figsize'] = [16.0, 10.0]
 warnings.simplefilter(action='ignore', category=FutureWarning)  # suppress np/mpl FutureWarning
 
+col_max = None
+col_min = None
+
 # Read clean data from CSV, normalise, and split
 def read_data():
     df = pd.read_csv(const.FILE, index_col='Date')
     df = df.drop('Month', 1)
 
     # normalise
-    max_val = df.max()
-    min_val = df.min()
+    global col_max
+    global col_min
+    col_max = df.max()
+    col_min = df.min()
     def normalise_data(row):
         for i, col in enumerate(df):
-            row[col] = np.interp(row[col], [min_val[i], max_val[i]], [0, 1])
+            row[col] = np.interp(row[col], [col_min[i], col_max[i]], [0, 1])
         return row
 
     df = df.apply(normalise_data, axis=1)
@@ -41,8 +46,18 @@ def read_data():
     return train_x, train_y, val_x, val_y, test_x, test_y
 
 # Denormalise
-def denormalise_data(val, max_val, min_val):
-    return (val * (max_val - min_val)) + min_val
+def denormalise_data(val, dn_all=False):
+    if dn_all:
+        for i, row in enumerate(val):
+            for j, col in enumerate(row):
+                max_val = col_max[j]
+                min_val = col_min[j]
+                row[j] = (col * (max_val - min_val)) + min_val
+        return val
+    else:
+        max_val = col_max['PanE']
+        min_val = col_min['PanE']
+        return (val * (max_val - min_val)) + min_val
 
 # Plot prediction data
 def plot(pred, expected, plot_type='scatter'):
@@ -56,7 +71,9 @@ def plot(pred, expected, plot_type='scatter'):
         plt.xlabel('Data point')
         plt.ylabel('PanE')
     else:
-        ax1.plot([0,1],[0,1], color='black', alpha=0.5, label='Expected')   # reference line
+        max_val = col_max['PanE']
+        min_val = col_min['PanE']
+        ax1.plot([min_val,max_val],[min_val,max_val], color='black', alpha=0.5, label='Expected')   # reference line
         ax1.scatter(expected, pred, label='PanE')
         plt.xlabel('Expected')
         plt.ylabel('Predicted')
