@@ -10,6 +10,7 @@ from deap import base, creator, tools, algorithms
 from scipy.stats import bernoulli
 from bitstring import BitArray
 gen_counter = 0
+computed_errs = {}
 
 np.random.seed(const.RANDOM_SEED)
 
@@ -40,13 +41,13 @@ def main():
         print 'Final population:\n', \
             map(lambda x: '%s|%s' % (''.join(str(y) for y in x[0:8]), ''.join(str(y) for y in x[8:])), final_pop), '\n', \
             map(lambda x: '%03d | %.5f' % (BitArray(x[0:8]).uint+1, float(1)/(BitArray(x[8:]).uint+2)), final_pop), '\n', \
-            map(lambda x: 'RMSE: %.5f' % (x.fitness.values), final_pop)
+            map(lambda x: 'RMSE %.6f' % (x.fitness.values), final_pop)
 
         # Hall of Fame (best individuals from all generations)
         print 'Hall of Fame:\n', \
             map(lambda x: '%s|%s' % (''.join(str(y) for y in x[0:8]), ''.join(str(y) for y in x[8:])), hof), '\n', \
             map(lambda x: '%03d | %.5f' % (BitArray(x[0:8]).uint+1, float(1)/(BitArray(x[8:]).uint+2)), hof), '\n', \
-            map(lambda x: 'RMSE: %.5f' % (x.fitness.values), hof)
+            map(lambda x: 'RMSE %.6f' % (x.fitness.values), hof)
 
     else:
         mse = train_nn()
@@ -68,6 +69,10 @@ def train_nn(ga_individual=None):
         global gen_counter
         gen_counter += 1
         print '(Idx: %04d) | Neurons: %03d, LR: %05f' % (gen_counter, hidden_neurons, const.LEARNING_RATE)
+
+        # Prevent recalculating the same model errors
+        if (hidden_neurons,const.LEARNING_RATE) in computed_errs:
+            return (computed_errs[(hidden_neurons,const.LEARNING_RATE)],)
 
     # Generate NN with random starting weights
     layer_hidden = NN.Layer(const.NEURONS[0], hidden_neurons, 'Sigmoid')
@@ -149,6 +154,7 @@ def train_nn(ga_individual=None):
     tst_error = eval_model(j-1, test_x, test_y, layer_hidden, layer_output, 'test')
     prediction = predict(test_x, layer_hidden, layer_output)
 
+    computed_errs[(hidden_neurons,const.LEARNING_RATE)] = np.sqrt(val_error)
     # Plot on graph
     # modules.data.plot(prediction, test_y, 'scatter')
     return (np.sqrt(val_error),)
@@ -178,7 +184,7 @@ def eval_model(epoch_num, x_data, y_data, layer_hid, layer_out, eval_type=''):
     mse = np.mean(sq_err)
 
     if len(eval_type) > 0:
-        print 'Epoch %04d: %.5f MSE (%.5f RMSE) on %s set' % (epoch_num, mse, np.sqrt(mse), eval_type)
+        print 'Epoch %04d: %.6f MSE (%.6f RMSE) on %s set' % (epoch_num, mse, np.sqrt(mse), eval_type)
     return mse
 
 # Use model to predict on given X data
