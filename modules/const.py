@@ -9,13 +9,13 @@ VALIDATION_SPLIT = 0.2
 # Model
 NEURONS = [FEATURES, 8, 1] # Input, Hidden neurons, Output neurons
 LEARNING_RATE = 0.1
-MOMENTUM_ALPHA = 0.9
+MOMENTUM_ALPHA = 1.5
 MOMENTUM = True
 BOLD_DRIVER = False
 BOLD_DRIVER_INCREASE = 1.1  # Multiply LR by this amount if error is lower
 BOLD_DRIVER_DECREASE = 0.5
-MAX_EPOCHS = 5000
-VALIDATION_EPOCHS = 100 # check validation set error every X epochs
+MAX_EPOCHS = 50000
+VALIDATION_EPOCHS = 250 # check validation set error every X epochs
 
 # Genetic Evol Algorithm
 GA = False
@@ -30,6 +30,6 @@ GA_MUTATION_PB = 0.1
 TRAIN = False
 MODEL_DIR = './model/'
 MODEL_NAME = ''   # save model
-LOAD_MODEL = 'r06'   # '' or model name
+LOAD_MODEL = 'momentum1p1'   # '' or model name
 
-RANDOM_SEED = 50
+RANDOM_SEED = 10

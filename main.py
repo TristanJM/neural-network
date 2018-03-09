@@ -17,22 +17,26 @@ np.random.seed(const.RANDOM_SEED)
 def main():
     # If Genetic Algorithm
     if const.GA:
-        creator.create('MaxFitness', base.Fitness, weights = (-1.0,))
+        # declare individual fitness
+        creator.create('MaxFitness', base.Fitness, weights = (-1.0,))   # error minimisation problem
         creator.create('Individual', list, fitness = creator.MaxFitness)
 
         toolbox = base.Toolbox()
+        # create chromosomes for individuals in the population
         toolbox.register('binary', bernoulli.rvs, 0.5)
         toolbox.register('individual', tools.initRepeat, creator.Individual, toolbox.binary, n = const.GA_GENE_LEN)
         toolbox.register('population', tools.initRepeat, list, toolbox.individual)
 
+        # register genetic operations
         toolbox.register('mate', tools.cxOrdered)
         toolbox.register('mutate', tools.mutShuffleIndexes, indpb = 0.6)
-        # toolbox.register('select', tools.selRoulette)
         toolbox.register('select',  tools.selTournament, tournsize=4)
         toolbox.register('evaluate', train_nn)
 
         pop = toolbox.population(n = const.GA_POP_SIZE)
         hof = tools.HallOfFame(const.GA_BEST_INDIVIDUALS)
+
+        # run evolutionary algorithm
         r = algorithms.eaSimple(pop, toolbox, cxpb = const.GA_CROSSOVER_PB, mutpb = const.GA_MUTATION_PB,
             ngen = const.GA_GENERATIONS, halloffame = hof, verbose = True)
 
