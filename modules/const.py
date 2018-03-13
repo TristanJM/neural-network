@@ -9,7 +9,7 @@ VALIDATION_SPLIT = 0.2
 # Model
 NEURONS = [FEATURES, 8, 1] # Input, Hidden neurons, Output neurons
 LEARNING_RATE = 0.1
-MOMENTUM_ALPHA = 1.5
+MOMENTUM_ALPHA = 1.1
 MOMENTUM = True
 BOLD_DRIVER = False
 BOLD_DRIVER_INCREASE = 1.1  # Multiply LR by this amount if error is lower
@@ -30,6 +30,6 @@ GA_MUTATION_PB = 0.1
 TRAIN = False
 MODEL_DIR = './model/'
 MODEL_NAME = ''   # save model
-LOAD_MODEL = 'momentum1p1'   # '' or model name
+LOAD_MODEL = 'best'   # '' or model name
 
 RANDOM_SEED = 10
