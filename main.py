@@ -100,36 +100,26 @@ def train_nn(ga_individual=None):
                     layer_output_BD = copy.deepcopy(layer_output)
 
                     err_before = eval_model(j, train_x, train_y, layer_hidden_BD, layer_output_BD)
-
                     # Train on train data
                     for idx, train_x_row in enumerate(train_x):
                         # Backpropagate - feed forward/back and calculate weights
                         vals, out_delta, hid_delta = backprop(train_x_row, train_y[idx], layer_hidden, layer_output)
-
                         # Update weights
                         layer_hidden_BD.update_weights(np.array(hid_delta), train_x_row)
                         layer_output_BD.update_weights(np.array(out_delta), vals)
 
                     err_after = eval_model(j, train_x, train_y, layer_hidden_BD, layer_output_BD)
 
-                    msg = ""
-                    if err_after > err_before:
-                        msg += "Higher so LR decrease"
-                    else:
-                        msg += "Lower so LR increase"
-                    # print "Error on epoch",j,"::", err_before, '->', err_after, msg
                     if err_after > err_before:
                         # If error goes up, reduce the Learning Rate
                         if const.LEARNING_RATE * const.BOLD_DRIVER_DECREASE != 0.0:
                             const.LEARNING_RATE *= const.BOLD_DRIVER_DECREASE
                         adjustment_needed = True
                         adjustment_count += 1
-                        # print "BOLD DRIVER REDUCED LR TO", const.LEARNING_RATE
                     else:
                         # If the error goes down, Learning Rate may be too small
                         adjustment_needed = False
                         const.LEARNING_RATE *= const.BOLD_DRIVER_INCREASE
-                        # print "BOLD DRIVER INCREASED LR TO", const.LEARNING_RATE
                         clone_layer(layer_hidden_BD, layer_hidden)
                         clone_layer(layer_output_BD, layer_output)
             else:
@@ -141,8 +131,6 @@ def train_nn(ga_individual=None):
                     # Update weights
                     layer_hidden.update_weights(np.array(hid_delta), train_x_row)
                     layer_output.update_weights(np.array(out_delta), vals)
-
-            # print "LR", const.LEARNING_RATE
 
             if j % const.VALIDATION_EPOCHS == 0:
                 err = eval_model(j, val_x, val_y, layer_hidden, layer_output, 'validation')
