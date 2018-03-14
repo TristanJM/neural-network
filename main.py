@@ -72,7 +72,7 @@ def train_nn(ga_individual=None):
         # Stats
         global gen_counter
         gen_counter += 1
-        print '(Idx: %04d) | Neurons: %03d, LR: %05f' % (gen_counter, hidden_neurons, const.LEARNING_RATE)
+        print('(Idx: %04d) | Neurons: %03d, LR: %05f' % (gen_counter, hidden_neurons, const.LEARNING_RATE))
 
         # Prevent recalculating the same model errors
         if (hidden_neurons,const.LEARNING_RATE) in computed_errs:
@@ -135,7 +135,7 @@ def train_nn(ga_individual=None):
             if j % const.VALIDATION_EPOCHS == 0:
                 err = eval_model(j, val_x, val_y, layer_hidden, layer_output, 'validation')
                 if last_val_err is not None and err >= last_val_err:
-                    print "Overfitting detected"
+                    print("Overfitting detected")
                     overfit = True
                 last_val_err = err
             j += 1
@@ -158,7 +158,7 @@ def train_nn(ga_individual=None):
         # denormalised RMSE
         dn_sq_err = (dn_test_y - dn_prediction)**2
         dn_mse = np.mean(dn_sq_err)
-        print 'Epoch %04d: %.6f MSE (%.6f RMSE) on %s set' % (j-1, dn_mse, np.sqrt(dn_mse), 'denormalised test')
+        print('Epoch %04d: %.6f MSE (%.6f RMSE) on %s set' % (j-1, dn_mse, np.sqrt(dn_mse), 'denormalised test'))
 
         # Plot on graph
         modules.data.plot(dn_prediction, dn_test_y, 'scatter')
@@ -190,7 +190,7 @@ def eval_model(epoch_num, x_data, y_data, layer_hid, layer_out, eval_type=''):
     mse = np.mean(sq_err)
 
     if len(eval_type) > 0:
-        print 'Epoch %04d: %.6f MSE (%.6f RMSE) on %s set' % (epoch_num, mse, np.sqrt(mse), eval_type)
+        print('Epoch %04d: %.6f MSE (%.6f RMSE) on %s set' % (epoch_num, mse, np.sqrt(mse), eval_type))
     return mse
 
 # Use model to predict on given X data
@@ -213,7 +213,7 @@ def save_model(layer_hidden, layer_output):
 def load_model(layer_hidden, layer_output):
     if len(const.LOAD_MODEL) > 0:
         try:
-            print "Loading model..."
+            print("Loading model...")
             # Weights
             loaded_hidden = np.loadtxt(const.MODEL_DIR + 'model_' + const.LOAD_MODEL + '_hidden.txt')
             loaded_output = np.loadtxt(const.MODEL_DIR + 'model_' + const.LOAD_MODEL + '_output.txt')
@@ -230,12 +230,12 @@ def load_model(layer_hidden, layer_output):
             layer_hidden.bias = hidden_bias
             layer_output.bias = output_bias
         except IOError as e:
-            print e
+            print(e)
 
 # Print model weights
 def show_weights(layer_hidden, layer_output, info_str):
-    print ">> Weights after %s:" % (info_str)
-    print "Hidden weights:\n{}\nOutput weights:\n{}".format(layer_hidden.weights, layer_output.weights)
+    print(">> Weights after %s:" % (info_str))
+    print("Hidden weights:\n{}\nOutput weights:\n{}".format(layer_hidden.weights, layer_output.weights))
 
 # Clone layer weights from layer 1 into layer 2
 def clone_layer(layer1, layer2):
