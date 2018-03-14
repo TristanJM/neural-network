@@ -33,4 +33,8 @@ Denormalised RMSE:  `0.158563`
 
 ![Pan evaporation plotted prediction](./results/PanE%20Prediction.png "Pan evaporation prediction")
 
+Comparison with multiple linear regression model:
+
+![Linear regression plotted prediction](./results/Regression%20Prediction.png "Regression vs NN prediction")
+
 ---
