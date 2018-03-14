@@ -31,6 +31,6 @@ Test RMSE:          `0.009849`
 
 Denormalised RMSE:  `0.158563`
 
-Plotting prediction:
-
 ![Pan evaporation plotted prediction](./results/PanE%20Prediction.png "Pan evaporation prediction")
+
+---
