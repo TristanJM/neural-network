@@ -14,15 +14,20 @@ pip install numpy pandas copy matplotlib warnings deap scipy bitstring
 ## Results
 The best results for the river basin's pan evaporation prediction (Fresno, CA):
 
+|Hyperparameter|Value|
+|---|---|
 |Hidden neurons|8|
 |Learning rate|0.1|
 |Data split|60/20/20|
 |Momentum|True (alpha = 1.1)|
 |Bold Driver|False|
 |Random seed|10|
-|Validation RMSE|0.010292|
-|Test RMSE|0.009849|
-|Denormalised RMSE|0.158563|
+
+---
+
+Validation RMSE: 0.010292
+Test RMSE: 0.009849
+Denormalised RMSE: 0.158563
 
 Plotting prediction:
-![Pan evaporation plotted prediction](/results/PanE Prediction.png "Pan evaporation prediction")
+![Pan evaporation plotted prediction](results/PanE Prediction.png "Pan evaporation prediction")
