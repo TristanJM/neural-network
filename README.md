@@ -26,8 +26,11 @@ The best results for the river basin's pan evaporation prediction (Fresno, CA):
 ---
 
 Validation RMSE: 0.010292
+
 Test RMSE: 0.009849
+
 Denormalised RMSE: 0.158563
 
 Plotting prediction:
-![Pan evaporation plotted prediction](results/PanE Prediction.png "Pan evaporation prediction")
+
+![Pan evaporation plotted prediction](./results/PanE Prediction.png "Pan evaporation prediction")
